@@ -40,7 +40,9 @@ def main():
     args = parser.parse_args()
     # Open a file
     content = open_file(args.name)
+    # Convert splitted checksum values to int
     cheksum_values = [map(int, row.split()) for row in content.splitlines()]
+    # Print the result of calculations
     print "Checksum value: " +str(sum([max(line) - min(line) for line in cheksum_values]))
 
 if __name__ == "__main__":

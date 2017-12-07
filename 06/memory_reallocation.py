@@ -68,6 +68,5 @@ def main():
     memory_rellocation_counter(args.name)
 
 
-
 if __name__ == "__main__":
     main()

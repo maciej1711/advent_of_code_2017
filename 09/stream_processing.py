@@ -76,7 +76,8 @@ def open_file(file_name):
 
 def char_stream_processing(file_name):
     """
-
+    This method parses input string and count the number of "{}" groups ignoring canceled characters "!a" and garbage
+    items "<->". Number of garbage characters is also calculated in this algorythm.
     :param file_name: name of a file with input data
     """
     content = open_file(file_name)

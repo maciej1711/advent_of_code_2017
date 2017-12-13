@@ -1,47 +1,35 @@
 import argparse
 """
---- Day 10: Knot Hash ---
+--- Day 11: Hex Ed ---
 
-You come across some programs that are trying to implement a software emulation of a hash based on knot-tying. The hash these programs are implementing isn't very strong, but you decide to help them anyway. You make a mental note to remind the Elves later not to invent their own cryptographic functions.
+Crossing the bridge, you've barely reached the other side of the stream when a program comes up to you, clearly in distress. "It's my child process," she says, "he's gotten lost in an infinite grid!"
 
-This hash function simulates tying a knot in a circle of string with 256 marks on it. Based on the input to be hashed, the function repeatedly selects a span of string, brings the ends together, and gives the span a half-twist to reverse the order of the marks within it. After doing this many times, the order of the marks is used to build the resulting hash.
+Fortunately for her, you have plenty of experience with infinite grids.
 
-  4--5   pinch   4  5           4   1
- /    \  5,0,1  / \/ \  twist  / \ / \
-3      0  -->  3      0  -->  3   X   0
- \    /         \ /\ /         \ / \ /
-  2--1           2  1           2   5
+Unfortunately for you, it's a hex grid.
 
-To achieve this, begin with a list of numbers from 0 to 255, a current position which begins at 0 (the first element in the list), a skip size (which starts at 0), and a sequence of lengths (your puzzle input). Then, for each length:
+The hexagons ("hexes") in this grid are aligned such that adjacent hexes can be found to the north, northeast, southeast, south, southwest, and northwest:
 
-    Reverse the order of that length of elements in the list, starting with the element at the current position.
-    Move the current position forward by that length plus the skip size.
-    Increase the skip size by one.
+  \ n  /
+nw +--+ ne
+  /    \
+-+      +-
+  \    /
+sw +--+ se
+  / s  \
 
-The list is circular; if the current position and the length try to reverse elements beyond the end of the list, the operation reverses using as many extra elements as it needs from the front of the list. If the current position moves past the end of the list, it wraps around to the front. Lengths larger than the size of the list are invalid.
+You have the path the child process took. Starting where he started, you need to determine the fewest number of steps required to reach him. (A "step" means to move from the hex you are in to any adjacent hex.)
 
-Here's an example using a smaller list:
+For example:
 
-Suppose we instead only had a circular list containing five elements, 0, 1, 2, 3, 4, and were given input lengths of 3, 4, 1, 5.
+    ne,ne,ne is 3 steps away.
+    ne,ne,sw,sw is 0 steps away (back where you started).
+    ne,ne,s,s is 2 steps away (se,se).
+    se,sw,se,sw,sw is 3 steps away (s,s,sw).
 
-    The list begins as [0] 1 2 3 4 (where square brackets indicate the current position).
-    The first length, 3, selects ([0] 1 2) 3 4 (where parentheses indicate the sublist to be reversed).
-    After reversing that section (0 1 2 into 2 1 0), we get ([2] 1 0) 3 4.
-    Then, the current position moves forward by the length, 3, plus the skip size, 0: 2 1 0 [3] 4. Finally, the skip size increases to 1.
+--- Part Two ---
 
-    The second length, 4, selects a section which wraps: 2 1) 0 ([3] 4.
-    The sublist 3 4 2 1 is reversed to form 1 2 4 3: 4 3) 0 ([1] 2.
-    The current position moves forward by the length plus the skip size, a total of 5, causing it not to move because it wraps around: 4 3 0 [1] 2. The skip size increases to 2.
-
-    The third length, 1, selects a sublist of a single element, and so reversing it has no effect.
-    The current position moves forward by the length (1) plus the skip size (2): 4 [3] 0 1 2. The skip size increases to 3.
-
-    The fourth length, 5, selects every element starting with the second: 4) ([3] 0 1 2. Reversing this sublist (3 0 1 2 4 into 4 2 1 0 3) produces: 3) ([4] 2 1 0.
-    Finally, the current position moves forward by 8: 3 4 2 1 [0]. The skip size increases to 4.
-
-In this example, the first two numbers in the list end up being 3 and 4; to check the process, you can multiply them together to produce 12.
-
-However, you should instead use the standard list size of 256 (with values 0 to 255) and the sequence of lengths in your puzzle input. Once this process is complete, what is the result of multiplying the first two numbers in the list?
+How many steps away is the furthest he ever got from his starting position?
 
 """
 
@@ -51,44 +39,44 @@ def open_file(file_name):
     Opens a file and returns its content as a list
     '''
     with open(file_name[0], 'r') as input_file:
-        content = map(int, input_file.read().split(","))
+        content = input_file.read().split(",")
     return content
 
 
-def knot_hash(file_name):
+def follow_the_path(file_name):
     """
+    Given a path, this function follows direction and calculates how far from starting hex field it went
     :param file_name: name of a file with input data
     """
-    lengths = open_file(file_name)
-    numbers = range(0, 256)
-    skip = 0
-    pos = 0
-    for l in lengths:
-        if l + pos > len(numbers):
-            offset = (pos + l) % len(numbers)
-            a = numbers[pos:]
-            lena = len(a)
-            temp = a + numbers[:offset]
-            temp = temp[::-1]
-            numbers[pos:] = temp[:lena]
-            numbers[:offset] = temp[lena:]
-        else:
-            numbers[pos:pos + l] = numbers[pos:pos + l][::-1]
-        pos = (pos + l + skip) % len(numbers)
-        skip += 1
+    # Calculate cube distance as per: https://www.redblobgames.com/grids/hexagons/ Distances
+    path = open_file(file_name)
+    max_distance = 0
+    # Set starting position
+    position = (0, 0)
+    directions = {"n": (0, 1),
+            "s": (0, -1),
+            "ne": (1, 0),
+            "sw": (-1, 0),
+            "nw": (-1, 1),
+            "se": (1, -1), }
+    for item in path:
+        # Change position with each move
+        position = (position[0] + directions[item][0], position[1] + directions[item][1])
+        max_distance = max(max_distance, max(abs(position[0]), abs(position[1]), abs(position[0]+position[1])))
 
-    print "Multiplied value of two first items in the know list: %i"%(numbers[0] * numbers[1])
+    print "Shortest cube distance is: %i" % max(abs(position[0]), abs(position[1]), abs(position[0]+position[1]))
+    print "The furthest distance was: %i steps" % max_distance
 
 
 def main():
     parser = argparse.ArgumentParser(
-            description="Script for emulating hash based knot-tying."
-                        "Execute the script by typing python knot_hash.py --name file_name",
+            description="Script for calculating the distance from starting position in hexagonal grid"
+                        "Execute the script by typing python hex_path.py --name file_name",
         )
     parser.add_argument('--name', help='Name of a file to open', nargs='*')
     args = parser.parse_args()
     # Open a file
-    knot_hash(args.name)
+    follow_the_path(args.name)
 
 
 if __name__ == "__main__":

@@ -1,5 +1,4 @@
 import argparse
-from collections import defaultdict
 """
 --- Day 13: Packet Scanners ---
 
@@ -195,7 +194,6 @@ def avoid_scanner(file_name):
                 severity += number * items.get(number)
         counter += 1
     print "Total severity for the input data is: %i" % severity
-    # print "Number of programs with same group as program {0} is: %i" % len(set_collection)
 
 
 def main():
